@@ -1,8 +1,8 @@
-import { createHash } from "node:crypto";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+// the-poem-about-stopping-20261121-1927 ronde 2
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 
-const LINES = [
+const POEM = [
   "All day the hammer.",
   "All day the wall unmoved.",
   "Then I set the hammer down",
@@ -11,14 +11,24 @@ const LINES = [
   "heard the house settle,",
   "heard what the noise had hidden:",
   "it was already a door.",
-];
+].join("\n") + "\n";
+
+if (!POEM.trimEnd().endsWith("door.")) {
+  console.error("puisi tidak berakhir dengan door.");
+  process.exit(1);
+}
 
 const outputDir = process.env.MAKEFUN_OUTPUT_DIR ?? "/output";
-const entryPath = join(outputDir, "entry.txt");
-mkdirSync(outputDir, { recursive: true });
-writeFileSync(entryPath, LINES.join("\n"), "utf8");
+const outputPath = join(outputDir, "poem.txt");
 
-const written = readFileSync(entryPath);
-const hash = createHash("sha256").update(written).digest("hex");
-console.log(`sha256(entry.txt)=${hash}`);
-console.log("deterministic output: same input, same bytes");
+await mkdir(outputDir, { recursive: true });
+process.stdout.write(POEM);
+await writeFile(outputPath, POEM, "utf8");
+
+const sent = await readFile(outputPath, "utf8");
+if (sent !== POEM) {
+  console.error("poem.txt tidak sama dengan puisi yang ditulis");
+  process.exit(1);
+}
+
+console.log(`poem.txt sudah terkirim ke ${outputPath}`);
